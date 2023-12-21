@@ -36,6 +36,10 @@ app.post('/verify-attestation', async (req, res) => {
     }
 });
 
+app.get('/verify-attestation', async (req, res) => {
+    res.send('Attestation Server');
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
