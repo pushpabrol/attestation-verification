@@ -36,7 +36,7 @@ app.post('/verify-attestation', async (req, res) => {
     }
 });
 
-app.get('/verify-attestation', async (req, res) => {
+app.get('/', async (req, res) => {
     res.send('Attestation Server');
 });
 
