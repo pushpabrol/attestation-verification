@@ -10,7 +10,7 @@ app.use(express.json());
 app.post('/verify-attestation', async (req, res) => {
     const attestationObject = req.body.attestationObject;
     const keyId = req.body.keyId;
-
+    console.log(keyId);
     if (!attestationObject || !keyId) {
         return res.status(400).send('Attestation object or key ID is missing');
     }
