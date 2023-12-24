@@ -20,7 +20,7 @@ app.post('/verify-attestation', async (req, res) => {
         const isValid = await validateAttestation(keyId,attestationObject);
 
         // Check the response
-        if (response.status === 200 && isValid) {
+        if (isValid) {
             res.send('Attestation is valid');
         } else {
             res.send('Attestation is not valid');
