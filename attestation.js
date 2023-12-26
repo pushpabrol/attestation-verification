@@ -4,7 +4,7 @@ import path from 'path';
 import jsrsasign from 'jsrsasign';
 import { createHash } from 'crypto' ;
 import ASN1 from '@lapo/asn1js';
-import writeToFile from './writeToFile.cjs';
+//import writeToFile from './writeToFile.cjs';
 export default class Attestation {
     constructor(challenge, bundleIdentifier,data) {
         const decoded = (cbor.decodeAllSync(data))[0];
@@ -169,7 +169,7 @@ Attestation.prototype.verify = async function (base64KeyId) {
     credCert.readCertHex(credCertBuffer.toString('hex'));
     console.log(jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
     // this is a hack, for now... save the public key from Apple into a file and re use for assertion verification
-    writeToFile("publicKey.pem",jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
+    fs.writeFileSync("./publicKey.pem",jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
 
     const credCertPubKeyPoints = (credCert.getPublicKey()).getPublicKeyXYHex();
     const credCertPubKey = Buffer.concat([

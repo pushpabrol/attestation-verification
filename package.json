@@ -12,17 +12,9 @@
   "license": "ISC",
   "dependencies": {
     "@lapo/asn1js": "^1.2.4",
-    "@simplewebauthn/server": "^8.3.5",
-    "axios": "^1.6.2",
-    "base64url": "^3.0.1",
     "cbor": "^9.0.1",
-    "cbor-x": "^1.5.6",
-    "cborg": "^4.0.5",
-    "cose-kit": "^1.7.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "jsrsasign": "^10.9.0",
-    "path": "^0.12.7",
-    "sha256": "^0.2.0"
-  }
+    "jsrsasign": "^10.9.0"
+    }
 }
