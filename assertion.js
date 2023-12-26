@@ -49,7 +49,7 @@ Assertion.prototype.verify = async function (clientData, publicKeyPem, appID, pr
     if (!isSignatureValid) {
         throw new ValidationError('Invalid signature');
     }
-    return isSignatureValid;
+
     }
     catch(error){
         console.log(error);
@@ -74,6 +74,7 @@ Assertion.prototype.verify = async function (clientData, publicKeyPem, appID, pr
     if (!receivedChallenge === storedChallenge) {
         throw new ValidationError('Invalid client data');
     }
+    return isSignatureValid;
 };
 
 

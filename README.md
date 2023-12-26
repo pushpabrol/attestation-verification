@@ -16,7 +16,7 @@ This is the server side code for the iOs App code in https://github.com/pushpabr
 ## Installation
 1. Clone the repository.
 2. Install the required packages: `npm install`.
-3. Copy .env.sample to .env and set the values
+3. Copy .env.sample to .env and set the values.
 
 ## Usage
 1. Set environment variables for challenges and bundle identifiers.
