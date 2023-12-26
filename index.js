@@ -2,7 +2,8 @@ import express from 'express';
 import Assertion from './assertion.js';
 import Attestation from './attestation.js';
 import dotenv from 'dotenv';
-import fs from 'fs';
+import { readFileSync } from 'fs';
+import path from 'path';
 dotenv.config();
 const attestationChallenge = process.env.DEMO_ATTESTATION_CHALLENGE;
 const assertionChallenge = process.env.DEMO_ASSERTION_CHALLENGE;
@@ -56,9 +57,10 @@ app.post('/verify-assertion', async (req, res) => {
     const cData = JSON.parse(Buffer.from(clientData,'base64').toString('utf-8'));
     console.log(cData.challenge);
     var ass = new Assertion(Buffer.from(assertion, 'base64'));
-
+    const file = path.join(process.cwd(),  'publicKey.pem');
+    const publicKey = readFileSync(file, 'utf8');
     const isValid = await ass.verify(Buffer.from(clientData,'base64'),
-         fs.readFileSync('./publicKey.pem'),bundleIdentifier,0,cData.challenge,assertionChallenge)
+         publicKey,bundleIdentifier,0,cData.challenge,assertionChallenge)
 
     console.log(isValid);
 
