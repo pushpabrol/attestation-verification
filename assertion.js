@@ -39,13 +39,13 @@ Assertion.prototype.verify = async function (clientData, publicKeyPem, appID, pr
     // 2. Concatenate authenticatorData and clientDataHash
     // and apply a SHA256 hash over the result to form nonce.
     const nonce = crypto.createHash('sha256').update(Buffer.concat([this.authenticatorData.bytes, clientDataHash])).digest();
-
+    var isSignatureValid  = false;
     // 3. Use the public key to verify that the assertion’s signature is valid for nonce.
     try {
     const publicKey = crypto.createPublicKey(
         publicKeyPem);
-    const isSignatureValid = crypto.verify(null, nonce, publicKey, this.signature);
-    console.log(isSignatureValid)
+        isSignatureValid = crypto.verify(null, nonce, publicKey, this.signature);
+    console.log("isSignatureValid", isSignatureValid)
     if (!isSignatureValid) {
         throw new ValidationError('Invalid signature');
     }
@@ -61,6 +61,7 @@ Assertion.prototype.verify = async function (clientData, publicKeyPem, appID, pr
     if (!appIDHash.equals(this.authenticatorData.rpID)) {
         throw new ValidationError('Invalid App ID');
     }
+    console.log("App ID is valid!");
 
     // 5. Verify that the authenticator data’s counter value is greater
     // than the value from the previous assertion, or greater than 0
@@ -69,11 +70,15 @@ Assertion.prototype.verify = async function (clientData, publicKeyPem, appID, pr
         throw new ValidationError('Invalid counter');
     }
 
+    console.log("previousCounter", previousCounter);
+    console.log("counter", this.authenticatorData.counter);
+
     // 6. Verify that the challenge embedded in the client data matches
     // the earlier challenge to the client.
     if (!receivedChallenge === storedChallenge) {
         throw new ValidationError('Invalid client data');
     }
+    console.log("recieved and stored challenges, match!");
     return isSignatureValid;
 };
 
