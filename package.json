@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@lapo/asn1js": "^1.2.4",
+    "@lapo/asn1js": "git+https://github.com/lapo-luchini/asn1js.git",
     "cbor": "^9.0.1",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
