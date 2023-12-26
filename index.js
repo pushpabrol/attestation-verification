@@ -57,9 +57,9 @@ app.post('/verify-assertion', async (req, res) => {
     const cData = JSON.parse(Buffer.from(clientData,'base64').toString('utf-8'));
     console.log(cData.challenge);
     var ass = new Assertion(Buffer.from(assertion, 'base64'));
-    const filePath = path.join("/tmp", "publicKey.pem");
+    //const filePath = path.join("/tmp", "publicKey.pem");
     //const file = path.join(process.cwd(),  'publicKey.pem');
-    const publicKey = readFileSync(filePath, 'utf8');
+    const publicKey = readFileSync("/tmp/publicKey.pem", 'utf8');
     const isValid = await ass.verify(Buffer.from(clientData,'base64'),
          publicKey,bundleIdentifier,0,cData.challenge,assertionChallenge)
 
