@@ -57,10 +57,10 @@ app.post('/verify-assertion', async (req, res) => {
     console.log(cData.challenge);
     var ass = new Assertion(Buffer.from(assertion, 'base64'));
 
-    const isValid = await ass.verify(cData,
+    const isValid = await ass.verify(Buffer.from(clientData,'base64'),
          fs.readFileSync('./publicKey.pem'),bundleIdentifier,0,cData.challenge,assertionChallenge)
 
-
+    console.log(isValid);
 
     if (isValid) {
         res.send({ status: 'success' });

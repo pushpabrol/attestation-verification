@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import cbor from 'cbor'; // You might need to install a CBOR package
-import fs from 'fs';
+
 
 export default class Assertion {
     constructor(data) {
@@ -49,6 +49,7 @@ Assertion.prototype.verify = async function (clientData, publicKeyPem, appID, pr
     if (!isSignatureValid) {
         throw new ValidationError('Invalid signature');
     }
+    return isSignatureValid;
     }
     catch(error){
         console.log(error);
@@ -74,4 +75,5 @@ Assertion.prototype.verify = async function (clientData, publicKeyPem, appID, pr
         throw new ValidationError('Invalid client data');
     }
 };
+
 
