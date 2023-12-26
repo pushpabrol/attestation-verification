@@ -1,6 +1,5 @@
 import cbor from 'cbor'; // Ensure this package is installed
 import fs from 'fs';
-import path from 'path';
 import jsrsasign from 'jsrsasign';
 import { createHash } from 'crypto' ;
 import ASN1 from '@lapo/asn1js';

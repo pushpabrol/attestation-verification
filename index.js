@@ -2,6 +2,7 @@ import express from 'express';
 import Assertion from './assertion.js';
 import Attestation from './attestation.js';
 import dotenv from 'dotenv';
+import fs from 'fs';
 dotenv.config();
 const attestationChallenge = process.env.DEMO_ATTESTATION_CHALLENGE;
 const assertionChallenge = process.env.DEMO_ASSERTION_CHALLENGE;
