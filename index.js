@@ -2,8 +2,7 @@ import express from 'express';
 import Assertion from './assertion.js';
 import Attestation from './attestation.js';
 import dotenv from 'dotenv';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { kv } from "@vercel/kv";
 dotenv.config();
 const attestationChallenge = process.env.DEMO_ATTESTATION_CHALLENGE;
 const assertionChallenge = process.env.DEMO_ASSERTION_CHALLENGE;
@@ -59,7 +58,9 @@ app.post('/verify-assertion', async (req, res) => {
     var ass = new Assertion(Buffer.from(assertion, 'base64'));
     //const filePath = path.join("/tmp", "publicKey.pem");
     //const file = path.join(process.cwd(),  'publicKey.pem');
-    const publicKey = readFileSync("/tmp/publicKey.pem", 'utf8');
+    //const publicKey = readFileSync("/tmp/publicKey.pem", 'utf8');
+    const publicKey = await kv.get("publicKey");
+    //await kv.set("publicKey", jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
     const isValid = await ass.verify(Buffer.from(clientData,'base64'),
          publicKey,bundleIdentifier,0,cData.challenge,assertionChallenge)
 
