@@ -9,10 +9,8 @@ import { kv } from "@vercel/kv";
 dotenv.config();
 import jwt from 'jsonwebtoken';
 
-//const attestationChallenge = process.env.DEMO_ATTESTATION_CHALLENGE;
-//const assertionChallenge = process.env.DEMO_ASSERTION_CHALLENGE;
 const bundleIdentifier = process.env.DEMO_APP_BUNDLE_ID;
-
+const secret = 'your-secret-key';
 const app = express();
 app.use(express.json());
 
