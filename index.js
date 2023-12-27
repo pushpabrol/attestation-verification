@@ -3,6 +3,7 @@ import Assertion from './assertion.js';
 import Attestation from './attestation.js';
 import dotenv from 'dotenv';
 import fetch from "node-fetch";
+import crypto from 'crypto';
 globalThis.fetch = fetch
 import { kv } from "@vercel/kv";
 dotenv.config();
