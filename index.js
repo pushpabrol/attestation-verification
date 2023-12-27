@@ -10,44 +10,26 @@ dotenv.config();
 import jwt from 'jsonwebtoken';
 
 //const attestationChallenge = process.env.DEMO_ATTESTATION_CHALLENGE;
-const assertionChallenge = process.env.DEMO_ASSERTION_CHALLENGE;
+//const assertionChallenge = process.env.DEMO_ASSERTION_CHALLENGE;
 const bundleIdentifier = process.env.DEMO_APP_BUNDLE_ID;
 
 const app = express();
 app.use(express.json());
 
-const challengeSigningKey = `-----BEGIN EC PRIVATE KEY-----
-MHcCAQEEIAJeKW5G6u7jnYDw6ILhCKLh1yOsjt+aqJjxxUZLkJleoAoGCCqGSM49
-AwEHoUQDQgAEqprJ7tj0MPpffYf/kLD4f8Qs+cPT8DoC6JR+UXLkowKklRUv348B
-SbYMfQkq98qDv8ldD+4GXj+Blb2dnmvdgQ==
------END EC PRIVATE KEY-----`
-const secret = 'your-very-secure-secret'; 
-
-app.get('/challengeSigning.jwks', (req,res) => {
-    res.json({
-        "keys" :[
-            {
-                "kty": "EC",
-                "kid": "IryCe7WPz2bExeK8A_jbcCvgQzMm5Ngz6KmYzk2lHTM",
-                "use": "sig",
-                "alg": "ES256",
-                "crv": "P-256",
-                "x": "qprJ7tj0MPpffYf_kLD4f8Qs-cPT8DoC6JR-UXLkowI",
-                y: "pJUVL9-PAUm2DH0JKvfKg7_JXQ_uBl4_gZW9nZ5r3YE"
-              }
-        ]
-    })
-});
 
 app.get('/generate-attestion-challenge', async (req, res) => {
     const correlationId = crypto.randomBytes(16).toString('hex'); // Generate a unique correlation ID
     const challenge = { correlationId, timestamp: new Date().getTime() };
-    const attestationChallenge = jwt.sign(challenge, secret); // Sign with ES256 private key
+    const attestationChallenge = jwt.sign(challenge, secret); 
     await kv.set(correlationId, attestationChallenge);
     res.json({ attestationChallenge, correlationId });
 });
 
-app.get('/generate-assertion-challenge', (req, res) => {
+app.post('/generate-assertion-challenge', async (req, res) => {
+    const keyId = req.body.keyId;
+    const challenge = { keyId, timestamp: new Date().getTime() };
+    const assertionChallenge = jwt.sign(challenge, secret); 
+    await kv.set(`${keyId}-c`, assertionChallenge);
     res.json({ assertionChallenge });
 });
 
@@ -84,7 +66,11 @@ app.post('/verify-attestation', async (req, res) => {
 
 app.post('/verify-assertion', async (req, res) => {
     const { clientData, assertion, keyId } = req.body;
-
+    const publicKey = await kv.get(keyId);
+    const assertionChallenge = await kv.get(`${keyId}-c`);
+    const decoded = jwt.verify(assertionChallenge, secret);
+        if(keyId !== decoded.keyId) res.send('Assertion is not valid, invalid keyId!');
+        else {
     // Verify the assertion using Apple's public key
     // The implementation depends on Apple's App Attest documentation
     console.log(clientData);
@@ -94,11 +80,6 @@ app.post('/verify-assertion', async (req, res) => {
     const cData = JSON.parse(Buffer.from(clientData,'base64').toString('utf-8'));
     console.log(cData.challenge);
     var ass = new Assertion(Buffer.from(assertion, 'base64'));
-    //const filePath = path.join("/tmp", "publicKey.pem");
-    //const file = path.join(process.cwd(),  'publicKey.pem');
-    //const publicKey = readFileSync("/tmp/publicKey.pem", 'utf8');
-    const publicKey = await kv.get("publicKey");
-    //await kv.set("publicKey", jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
     const isValid = await ass.verify(Buffer.from(clientData,'base64'),
          publicKey,bundleIdentifier,0,cData.challenge,assertionChallenge)
 
@@ -109,6 +90,7 @@ app.post('/verify-assertion', async (req, res) => {
     } else {
         res.status(400).send({ status: 'failure' });
     }
+}
 });
 
 

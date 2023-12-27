@@ -172,7 +172,7 @@ Attestation.prototype.verify = async function (base64KeyId) {
     // this is a hack, for now... save the public key from Apple into a file and re use for assertion verification
     //const filePath = path.join("/tmp", "publicKey.pem");
     //fs.writeFileSync("/tmp/publicKey.pem",jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
-    await kv.set("publicKey", jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
+    await kv.set(base64KeyId, jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
     const credCertPubKeyPoints = (credCert.getPublicKey()).getPublicKeyXYHex();
     const credCertPubKey = Buffer.concat([
         Buffer.from([0x04]),
