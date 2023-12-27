@@ -3,7 +3,8 @@
 ## Overview
 This repository contains a Node.js application designed for handling and verifying attestation and assertion processes. It focuses on security and authentication mechanisms, using cryptographic operations to ensure data integrity and authenticity.
 
-**This sample is just for demo purposes as each call for attestation will overwrite the contents of the publicKey.pem. In an actual solution the server will store this key per device+app combination**
+## Pre Requisites
+- Needs Vercel and Vercel KV
 
 This is the server side code for the iOs App code in https://github.com/pushpabrol/AppAttestTest
 
@@ -24,9 +25,9 @@ This is the server side code for the iOs App code in https://github.com/pushpabr
 3. Use the provided endpoints for attestation and assertion.
 
 ## Endpoints
-- `/generate-attestion-challenge`: Generates attestation challenges. TO DO... fix to make this dynamic
+- `/generate-attestion-challenge`: Generates attestation challenges
 - `/verify-attestation`: Verifies attestation objects.
-- `/generate-assertion-challenge`: Generates assertion challenges. TO DO... fix to make this dynamic
+- `/generate-assertion-challenge`: Generates assertion challenges
 - `/verify-assertion`: Verifies assertions.
 
 ## Contributing
