@@ -2,17 +2,48 @@ import express from 'express';
 import Assertion from './assertion.js';
 import Attestation from './attestation.js';
 import dotenv from 'dotenv';
+import fetch from "node-fetch";
+globalThis.fetch = fetch
 import { kv } from "@vercel/kv";
 dotenv.config();
-const attestationChallenge = process.env.DEMO_ATTESTATION_CHALLENGE;
+import jwt from 'jsonwebtoken';
+
+//const attestationChallenge = process.env.DEMO_ATTESTATION_CHALLENGE;
 const assertionChallenge = process.env.DEMO_ASSERTION_CHALLENGE;
 const bundleIdentifier = process.env.DEMO_APP_BUNDLE_ID;
 
 const app = express();
 app.use(express.json());
 
-app.get('/generate-attestion-challenge', (req, res) => {
-    res.json({ attestationChallenge });
+const challengeSigningKey = `-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIAJeKW5G6u7jnYDw6ILhCKLh1yOsjt+aqJjxxUZLkJleoAoGCCqGSM49
+AwEHoUQDQgAEqprJ7tj0MPpffYf/kLD4f8Qs+cPT8DoC6JR+UXLkowKklRUv348B
+SbYMfQkq98qDv8ldD+4GXj+Blb2dnmvdgQ==
+-----END EC PRIVATE KEY-----`
+const secret = 'your-very-secure-secret'; 
+
+app.get('/challengeSigning.jwks', (req,res) => {
+    res.json({
+        "keys" :[
+            {
+                "kty": "EC",
+                "kid": "IryCe7WPz2bExeK8A_jbcCvgQzMm5Ngz6KmYzk2lHTM",
+                "use": "sig",
+                "alg": "ES256",
+                "crv": "P-256",
+                "x": "qprJ7tj0MPpffYf_kLD4f8Qs-cPT8DoC6JR-UXLkowI",
+                y: "pJUVL9-PAUm2DH0JKvfKg7_JXQ_uBl4_gZW9nZ5r3YE"
+              }
+        ]
+    })
+});
+
+app.get('/generate-attestion-challenge', async (req, res) => {
+    const correlationId = crypto.randomBytes(16).toString('hex'); // Generate a unique correlation ID
+    const challenge = { correlationId, timestamp: new Date().getTime() };
+    const attestationChallenge = jwt.sign(challenge, secret); // Sign with ES256 private key
+    await kv.set(correlationId, attestationChallenge);
+    res.json({ attestationChallenge, correlationId });
 });
 
 app.get('/generate-assertion-challenge', (req, res) => {
@@ -23,12 +54,17 @@ app.get('/generate-assertion-challenge', (req, res) => {
 app.post('/verify-attestation', async (req, res) => {
     const attestationObject = req.body.attestationObject;
     const keyId = req.body.keyId;
+    const correlationId = req.body.correlationId;
     console.log(keyId);
     if (!attestationObject || !keyId) {
         return res.status(400).send('Attestation object or key ID is missing');
     }
 
     try {
+        const attestationChallenge = await kv.get(correlationId);
+        const decoded = jwt.verify(attestationChallenge, secret);
+        if(correlationId !== decoded.correlationId) res.send('Attestation is not valid, correlation error!');
+        else {
         const attestation = new Attestation(attestationChallenge,bundleIdentifier, Buffer.from(attestationObject, "base64"));
         const isValid = await attestation.verify(keyId);
         // Check the response
@@ -37,6 +73,7 @@ app.post('/verify-attestation', async (req, res) => {
         } else {
             res.send('Attestation is not valid');
         }
+    }
     } catch (error) {
         console.error('Error verifying attestation:', error);
         res.status(500).send('Internal server error');
