@@ -17,8 +17,8 @@ app.use(express.json());
 
 app.get('/generate-attestion-challenge', async (req, res) => {
     const correlationId = crypto.randomBytes(16).toString('hex'); // Generate a unique correlation ID
-    const challenge = { correlationId, timestamp: new Date().getTime() };
-    const attestationChallenge = jwt.sign(challenge, secret); 
+    const challenge = { correlationId, timestamp: new Date().getTime()};
+    const attestationChallenge = jwt.sign(challenge, secret);
     await kv.set(correlationId, attestationChallenge);
     res.json({ attestationChallenge, correlationId });
 });
@@ -26,7 +26,7 @@ app.get('/generate-attestion-challenge', async (req, res) => {
 app.post('/generate-assertion-challenge', async (req, res) => {
     const keyId = req.body.keyId;
     const challenge = { keyId, timestamp: new Date().getTime() };
-    const assertionChallenge = jwt.sign(challenge, secret); 
+    const assertionChallenge = jwt.sign(challenge, secret);
     await kv.set(`${keyId}-c`, assertionChallenge);
     res.json({ assertionChallenge });
 });
@@ -37,24 +37,27 @@ app.post('/verify-attestation', async (req, res) => {
     const keyId = req.body.keyId;
     const correlationId = req.body.correlationId;
     console.log(keyId);
-    if (!attestationObject || !keyId) {
-        return res.status(400).send('Attestation object or key ID is missing');
+    if (!attestationObject || !keyId || !correlationId) {
+        return res.status(400).send('Attestation object, key ID or correlationId is missing');
     }
 
     try {
         const attestationChallenge = await kv.get(correlationId);
+        if(attestationChallenge) {
         const decoded = jwt.verify(attestationChallenge, secret);
-        if(correlationId !== decoded.correlationId) res.send('Attestation is not valid, correlation error!');
+        if (correlationId !== decoded.correlationId) res.status(400).send('Attestation is not valid, correlation error!');
         else {
-        const attestation = new Attestation(attestationChallenge,bundleIdentifier, Buffer.from(attestationObject, "base64"));
-        const isValid = await attestation.verify(keyId);
-        // Check the response
-        if (isValid) {
-            res.send('Attestation is valid');
-        } else {
-            res.send('Attestation is not valid');
+            const attestation = new Attestation(attestationChallenge, bundleIdentifier, Buffer.from(attestationObject, "base64"));
+            const isValid = await attestation.verify(keyId);
+            // Check the response
+            if (isValid) {
+                await kv.del(correlationId);
+                res.send('Attestation is valid');
+            } else {
+                res.status(400).send('Attestation is not valid');
+            }
         }
-    }
+    } else res.status(400).send('Attestation is not valid, correlation error!');
     } catch (error) {
         console.error('Error verifying attestation:', error);
         res.status(500).send('Internal server error');
@@ -67,28 +70,27 @@ app.post('/verify-assertion', async (req, res) => {
     const publicKey = await kv.get(keyId);
     const assertionChallenge = await kv.get(`${keyId}-c`);
     const decoded = jwt.verify(assertionChallenge, secret);
-        if(keyId !== decoded.keyId) res.send('Assertion is not valid, invalid keyId!');
-        else {
-    // Verify the assertion using Apple's public key
-    // The implementation depends on Apple's App Attest documentation
-    console.log(clientData);
-    console.log(assertion);
+    if (keyId !== decoded.keyId) res.status(400).send('Assertion is not valid, invalid keyId!');
+    else {
+        // Verify the assertion using Apple's public key
+        // The implementation depends on Apple's App Attest documentation
+        console.log(clientData);
+        console.log(assertion);
+        const cData = JSON.parse(Buffer.from(clientData, 'base64').toString('utf-8'));
+        console.log(cData.challenge);
+        var ass = new Assertion(Buffer.from(assertion, 'base64'));
+        const isValid = await ass.verify(Buffer.from(clientData, 'base64'),
+            publicKey, bundleIdentifier, 0, cData.challenge, assertionChallenge)
 
+        console.log(isValid);
 
-    const cData = JSON.parse(Buffer.from(clientData,'base64').toString('utf-8'));
-    console.log(cData.challenge);
-    var ass = new Assertion(Buffer.from(assertion, 'base64'));
-    const isValid = await ass.verify(Buffer.from(clientData,'base64'),
-         publicKey,bundleIdentifier,0,cData.challenge,assertionChallenge)
-
-    console.log(isValid);
-
-    if (isValid) {
-        res.send({ status: 'success' });
-    } else {
-        res.status(400).send({ status: 'failure' });
+        if (isValid) {
+            await kv.del(`${keyId}-c`);
+            res.send({ status: 'success' });
+        } else {
+            res.status(400).send({ status: 'failure' });
+        }
     }
-}
 });
 
 
