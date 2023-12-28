@@ -26,8 +26,8 @@ app.get('/generate-attestion-challenge', async (req, res) => {
 app.post('/generate-assertion-challenge', async (req, res) => {
     const keyId = req.body.keyId;
     const challenge = { keyId, timestamp: new Date().getTime() };
-    const assertionChallenge = jwt.sign(challenge, secret);
-    await kv.set(`${keyId}-c`, assertionChallenge);
+    const assertionChallenge = jwt.sign(challenge, secret,{expiresIn : 20});
+    await kv.set(`${keyId}-c`, assertionChallenge, { ex: 20, nx: true });
     res.json({ assertionChallenge });
 });
 
