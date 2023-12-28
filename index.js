@@ -52,6 +52,8 @@ app.post('/verify-attestation', async (req, res) => {
             // Check the response
             if (isValid) {
                 await kv.del(correlationId);
+                //
+                await kv.set(keyId, attestation.attPublicKeyPem);
                 res.send('Attestation is valid');
             } else {
                 res.status(400).send('Attestation is not valid');

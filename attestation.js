@@ -157,10 +157,8 @@ Attestation.prototype.verify = async function (base64KeyId) {
 
     if(!AppleNonceExtension)
         throw new Error(`The certificate is missing Apple Nonce Extension ${NONCE_OID}!`)
-
     
     let appleNonceExtensionJSON = asn1ObjectToJSON(AppleNonceExtension).data;
-
     let certificateNonceBuffer  = appleNonceExtensionJSON[1].data[0].data[0].data[0].data;
     console.log("certificateNonceBuffer",certificateNonceBuffer.toString('hex'));
     if(Buffer.compare(certificateNonceBuffer, expectedNonceBuffer) !== 0)
@@ -169,7 +167,6 @@ Attestation.prototype.verify = async function (base64KeyId) {
     const credCert = new jsrsasign.X509();
     credCert.readCertHex(credCertBuffer.toString('hex'));
     console.log(jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
-    await kv.set(base64KeyId, jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
     const credCertPubKeyPoints = (credCert.getPublicKey()).getPublicKeyXYHex();
     const credCertPubKey = Buffer.concat([
         Buffer.from([0x04]),
@@ -182,6 +179,9 @@ Attestation.prototype.verify = async function (base64KeyId) {
         console.error(`Invalid attestation credential cert public key hash: ${credCertPubKeyHash} !== ${keyId}`);
         return false;
     }
+    // at this point the attestation is verified. Save the public key for attestation verification 
+    //await kv.set(base64KeyId, jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey()));
+    this.attPublicKeyPem =  jsrsasign.KEYUTIL.getPEM(credCert.getPublicKey());
     return true;
     
 };
