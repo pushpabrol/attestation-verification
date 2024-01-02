@@ -18,8 +18,8 @@ app.use(express.json());
 app.get('/generate-attestion-challenge', async (req, res) => {
     const correlationId = crypto.randomBytes(16).toString('hex'); // Generate a unique correlation ID
     const challenge = { correlationId, timestamp: new Date().getTime()};
-    const attestationChallenge = jwt.sign(challenge, secret);
-    await kv.set(correlationId, attestationChallenge);
+    const attestationChallenge = jwt.sign(challenge, secret,{expiresIn : 60});
+    await kv.set(correlationId, attestationChallenge, { ex: 60, nx: true });
     res.json({ attestationChallenge });
 });
 
@@ -61,7 +61,7 @@ app.post('/verify-attestation', async (req, res) => {
     
     } catch (error) {
         console.error('Error verifying attestation:', error);
-        res.status(500).send('Internal server error');
+        res.status(500).send(`Error verifying attestation: ${error}`);
     }
 });
 
