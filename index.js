@@ -44,13 +44,13 @@ app.post('/verify-attestation', async (req, res) => {
     try {
    
         const decoded = jwt.verify(attestationChallenge, secret);
-        if (!decoded.correlationId || (await kv.get(correlationId) !== attestationChallenge )) res.status(400).send('Attestation is not valid, correlationId missing or mismatch!');
+        if (!decoded.correlationId || (await kv.get(decoded.correlationId) !== attestationChallenge )) res.status(400).send('Attestation is not valid, correlationId missing or mismatch!');
         else {
             const attestation = new Attestation(attestationChallenge, bundleIdentifier, Buffer.from(attestationObject, "base64"));
             const isValid = await attestation.verify(keyId);
             // Check the response
             if (isValid) {
-                await kv.del(correlationId);
+                await kv.del(decoded.correlationId);
                 //
                 await kv.set(keyId, attestation.attPublicKeyPem);
                 res.send('Attestation is valid');
