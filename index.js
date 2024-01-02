@@ -20,7 +20,7 @@ app.get('/generate-attestion-challenge', async (req, res) => {
     const challenge = { correlationId, timestamp: new Date().getTime()};
     const attestationChallenge = jwt.sign(challenge, secret);
     await kv.set(correlationId, attestationChallenge);
-    res.json({ attestationChallenge, correlationId });
+    res.json({ attestationChallenge });
 });
 
 app.post('/generate-assertion-challenge', async (req, res) => {
@@ -35,17 +35,16 @@ app.post('/generate-assertion-challenge', async (req, res) => {
 app.post('/verify-attestation', async (req, res) => {
     const attestationObject = req.body.attestationObject;
     const keyId = req.body.keyId;
-    const correlationId = req.body.correlationId;
+    const attestationChallenge = req.body.attestationChallenge;
     console.log(keyId);
-    if (!attestationObject || !keyId || !correlationId) {
-        return res.status(400).send('Attestation object, key ID or correlationId is missing');
+    if (!attestationObject || !keyId || !attestationChallenge) {
+        return res.status(400).send('Attestation object, key ID or attestationChallenge is missing');
     }
 
     try {
-        const attestationChallenge = await kv.get(correlationId);
-        if(attestationChallenge) {
+   
         const decoded = jwt.verify(attestationChallenge, secret);
-        if (correlationId !== decoded.correlationId) res.status(400).send('Attestation is not valid, correlation error!');
+        if (!decoded.correlationId || (await kv.get(correlationId) !== attestationChallenge )) res.status(400).send('Attestation is not valid, correlationId missing or mismatch!');
         else {
             const attestation = new Attestation(attestationChallenge, bundleIdentifier, Buffer.from(attestationObject, "base64"));
             const isValid = await attestation.verify(keyId);
@@ -59,7 +58,7 @@ app.post('/verify-attestation', async (req, res) => {
                 res.status(400).send('Attestation is not valid');
             }
         }
-    } else res.status(400).send('Attestation is not valid, correlation error!');
+    
     } catch (error) {
         console.error('Error verifying attestation:', error);
         res.status(500).send('Internal server error');
